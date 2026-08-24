@@ -33,15 +33,19 @@ jobs:
           python -m pip install --upgrade pip
           pip install PySide6
 
-      - name: Check PySide6
+      - name: Install Android deployment dependencies
         run: |
-          python -c "import PySide6; print(PySide6.__version__)"
+          pip install -r \
+            "$(python -c 'import PySide6, os; print(os.path.join(os.path.dirname(PySide6.__file__), "scripts", "requirements-android.txt"))')"
 
-      - name: Build Android APK
+      - name: Check deployment tool
+        run: |
+          pyside6-android-deploy --help
+
+      - name: Build APK
         run: |
           pyside6-android-deploy \
             --name "Rastgele Sayi Uretici" \
-            --wheel-pyside \
             main.py
 
       - name: Find APK
