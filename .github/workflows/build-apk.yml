@@ -1,0 +1,55 @@
+name: Build PySide6 Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            openjdk-17-jdk \
+            git \
+            wget \
+            unzip
+
+      - name: Install PySide6
+        run: |
+          python -m pip install --upgrade pip
+          pip install PySide6
+
+      - name: Check PySide6
+        run: |
+          python -c "import PySide6; print(PySide6.__version__)"
+
+      - name: Build Android APK
+        run: |
+          pyside6-android-deploy \
+            --name "Rastgele Sayi Uretici" \
+            --wheel-pyside \
+            main.py
+
+      - name: Find APK
+        run: |
+          find . -type f -name "*.apk" -print
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Rastgele-Sayi-Uretici-APK
+          path: "**/*.apk"
