@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up Python
@@ -38,14 +38,35 @@ jobs:
           pip install -r \
             "$(python -c 'import PySide6, os; print(os.path.join(os.path.dirname(PySide6.__file__), "scripts", "requirements-android.txt"))')"
 
-      - name: Check deployment tool
+      - name: Download Android PySide6 wheels
         run: |
-          pyside6-android-deploy --help
+          mkdir -p wheels
+
+          pip download \
+            --only-binary=:all: \
+            --platform manylinux_2_28_x86_64 \
+            --python-version 3.11 \
+            --implementation cp \
+            --abi cp311 \
+            PySide6-Essentials \
+            -d wheels
+
+      - name: List wheels
+        run: |
+          ls -lh wheels
 
       - name: Build APK
         run: |
+          PYSIDE_WHEEL=$(find wheels -name "PySide6_Essentials*.whl" | head -n 1)
+          SHIBOKEN_WHEEL=$(find wheels -name "shiboken6*.whl" | head -n 1)
+
+          echo "PySide wheel: $PYSIDE_WHEEL"
+          echo "Shiboken wheel: $SHIBOKEN_WHEEL"
+
           pyside6-android-deploy \
             --name "Rastgele Sayi Uretici" \
+            --wheel-pyside "$PYSIDE_WHEEL" \
+            --wheel-shiboken "$SHIBOKEN_WHEEL" \
             main.py
 
       - name: Find APK
