@@ -9,8 +9,14 @@ from PySide6.QtWidgets import (
     QLabel,
     QPushButton,
     QFrame,
+    QSizePolicy,
 )
 from PySide6.QtCore import Qt
+
+
+# ============================================================
+# SAYI ÜRETİCİLERİ
+# ============================================================
 
 def generate_5_plus_1():
     numbers = sorted(random.sample(range(1, 35), 5))
@@ -24,7 +30,6 @@ def generate_5_plus_1():
 
 def generate_sayisal():
     first_six = sorted(random.sample(range(1, 91), 6))
-
     seventh = random.randint(1, 90)
 
     return (
@@ -35,13 +40,11 @@ def generate_sayisal():
 
 def generate_6_60():
     numbers = sorted(random.sample(range(1, 61), 6))
-
     return "   ".join(f"{n:02d}" for n in numbers)
 
 
 def generate_10_80():
     numbers = sorted(random.sample(range(1, 81), 10))
-
     return "   ".join(f"{n:02d}" for n in numbers)
 
 
@@ -55,12 +58,13 @@ class LotteryPanel(QFrame):
         super().__init__()
 
         self.generator = generator
-
         self.setObjectName("lotteryPanel")
 
         layout = QVBoxLayout()
-        layout.setContentsMargins(25, 25, 25, 25)
-        layout.setSpacing(20)
+
+        # Telefonda daha uygun boşluklar
+        layout.setContentsMargins(18, 18, 18, 18)
+        layout.setSpacing(12)
 
         # Başlık
         title_label = QLabel(title)
@@ -73,18 +77,27 @@ class LotteryPanel(QFrame):
         self.result.setWordWrap(True)
         self.result.setObjectName("result")
 
+        # Sonucun paneli taşırmamasını sağla
+        self.result.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Expanding
+        )
+
         # Buton
         button = QPushButton("SAYI ÜRET")
-        button.setCursor(Qt.CursorShape.PointingHandCursor)
-        button.setMinimumHeight(55)
+        button.setMinimumHeight(52)
+        button.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Fixed
+        )
         button.setObjectName("generateButton")
 
         button.clicked.connect(self.generate)
 
         layout.addWidget(title_label)
-        layout.addStretch()
+        layout.addStretch(1)
         layout.addWidget(self.result)
-        layout.addStretch()
+        layout.addStretch(1)
         layout.addWidget(button)
 
         self.setLayout(layout)
@@ -103,56 +116,97 @@ class MainWindow(QWidget):
         super().__init__()
 
         self.setWindowTitle("Rastgele Sayı Üretici")
-        self.resize(1100, 700)
+
+        # SABİT 1100x700 kaldırıldı.
+        # Android pencereyi kendi ekranına göre boyutlandıracak.
 
         main_layout = QVBoxLayout()
 
-        main_layout.setContentsMargins(30, 30, 30, 30)
-        main_layout.setSpacing(25)
+        # Telefon için daha küçük kenar boşlukları
+        main_layout.setContentsMargins(15, 15, 15, 15)
+        main_layout.setSpacing(15)
 
-        # Ana başlık
+        # ====================================================
+        # ANA BAŞLIK
+        # ====================================================
+
         title = QLabel("RASTGELE SAYI ÜRETİCİ")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        title.setWordWrap(True)
         title.setObjectName("mainTitle")
 
         main_layout.addWidget(title)
 
-        # 2x2 grid
-        grid = QGridLayout()
-        grid.setSpacing(20)
+        # ====================================================
+        # 2x2 GRID
+        # ====================================================
 
-        panel1 = LotteryPanel(
+        self.grid = QGridLayout()
+        self.grid.setSpacing(15)
+
+        self.panel1 = LotteryPanel(
             "5 + 1 LOTO",
             generate_5_plus_1
         )
 
-        panel2 = LotteryPanel(
+        self.panel2 = LotteryPanel(
             "SAYISAL LOTO",
             generate_sayisal
         )
 
-        panel3 = LotteryPanel(
+        self.panel3 = LotteryPanel(
             "6 / 60",
             generate_6_60
         )
 
-        panel4 = LotteryPanel(
+        self.panel4 = LotteryPanel(
             "10 / 80",
             generate_10_80
         )
 
-        grid.addWidget(panel1, 0, 0)
-        grid.addWidget(panel2, 0, 1)
-        grid.addWidget(panel3, 1, 0)
-        grid.addWidget(panel4, 1, 1)
+        self.grid.addWidget(self.panel1, 0, 0)
+        self.grid.addWidget(self.panel2, 0, 1)
+        self.grid.addWidget(self.panel3, 1, 0)
+        self.grid.addWidget(self.panel4, 1, 1)
 
-        main_layout.addLayout(grid)
+        main_layout.addLayout(self.grid)
 
         self.setLayout(main_layout)
 
+        # İlk açılışta telefon düzenini uygula
+        self.update_layout()
+
+    # ========================================================
+    # EKRAN GENİŞLİĞİNE GÖRE DÜZEN
+    # ========================================================
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.update_layout()
+
+    def update_layout(self):
+
+        width = self.width()
+
+        # Telefon / dar ekran
+        if width < 700:
+
+            self.grid.addWidget(self.panel1, 0, 0, 1, 1)
+            self.grid.addWidget(self.panel2, 1, 0, 1, 1)
+            self.grid.addWidget(self.panel3, 2, 0, 1, 1)
+            self.grid.addWidget(self.panel4, 3, 0, 1, 1)
+
+        # Tablet / geniş ekran
+        else:
+
+            self.grid.addWidget(self.panel1, 0, 0)
+            self.grid.addWidget(self.panel2, 0, 1)
+            self.grid.addWidget(self.panel3, 1, 0)
+            self.grid.addWidget(self.panel4, 1, 1)
+
 
 # ============================================================
-# STİL
+# UYGULAMA
 # ============================================================
 
 app = QApplication(sys.argv)
@@ -167,9 +221,9 @@ app.setStyleSheet("""
     }
 
     #mainTitle {
-        font-size: 30px;
+        font-size: 26px;
         font-weight: bold;
-        padding: 10px;
+        padding: 8px;
     }
 
     #lotteryPanel {
@@ -179,23 +233,24 @@ app.setStyleSheet("""
     }
 
     #panelTitle {
-        font-size: 23px;
+        font-size: 21px;
         font-weight: bold;
     }
 
     #result {
-        font-size: 26px;
+        font-size: 23px;
         font-weight: bold;
-        min-height: 80px;
+        min-height: 70px;
     }
 
     #generateButton {
         background-color: #222222;
         color: white;
         border: none;
-        border-radius: 8px;
+        border-radius: 10px;
         font-size: 17px;
         font-weight: bold;
+        min-height: 52px;
     }
 
     #generateButton:hover {
@@ -206,7 +261,6 @@ app.setStyleSheet("""
         background-color: #111111;
     }
 """)
-
 
 window = MainWindow()
 window.show()
